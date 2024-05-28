@@ -10,6 +10,10 @@ class QuoteScreen extends StatefulWidget {
 class _CotacaoScreenState extends State<QuoteScreen> {
   Map<String, dynamic>? _cotacoes;
   bool _isLoading = false;
+  String _fromCurrency = 'USD';
+  String _toCurrency = 'BRL';
+  TextEditingController _amountController = TextEditingController();
+  String _conversionResult = '';
 
   @override
   void initState() {
@@ -24,7 +28,7 @@ class _CotacaoScreenState extends State<QuoteScreen> {
 
     final String apiKey = "91252b59b0864697a0e159d758fa3bcf";
     final String baseCurrency = "BRL";
-    final List<String> moedas = ['USD', 'EUR', 'GBP', 'JPY'];
+    final List<String> moedas = ['USD', 'EUR', 'GBP', 'BRL'];
 
     final String oxrUrl =
         "https://open.er-api.com/v6/latest/$baseCurrency?apikey=$apiKey";
@@ -47,6 +51,21 @@ class _CotacaoScreenState extends State<QuoteScreen> {
         _isLoading = false;
       });
     }
+  }
+
+  void _convertCurrency() {
+    if (_amountController.text.isEmpty) {
+      return;
+    }
+
+    double amount = double.tryParse(_amountController.text) ?? 0;
+    double fromRate = _cotacoes![_fromCurrency];
+    double toRate = _cotacoes![_toCurrency];
+    double result = amount / fromRate * toRate;
+
+    setState(() {
+      _conversionResult = '${amount.toStringAsFixed(2)} $_fromCurrency = ${result.toStringAsFixed(2)} $_toCurrency';
+    });
   }
 
   @override
@@ -142,11 +161,6 @@ class _CotacaoScreenState extends State<QuoteScreen> {
                                     fontSize: 25.0,
                                   ),
                                 ),
-                                trailing: Icon(
-                                  aumento ? Icons.arrow_upward : Icons.arrow_downward,
-                                  color: aumento ? Colors.green : Colors.red,
-                                  size: 32.0,
-                                ),
                                 onTap: () {
                                   // Adicione ação ao tocar no card, se necessário
                                 },
@@ -154,6 +168,89 @@ class _CotacaoScreenState extends State<QuoteScreen> {
                             ),
                           );
                         }).toList(),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        children: [
+                          TextField(
+                            controller: _amountController,
+                            keyboardType: TextInputType.number,
+                            decoration: InputDecoration(
+                              labelText: 'Converter',
+                              labelStyle: TextStyle(color: Colors.white),
+                              filled: true,
+                              fillColor: Color.fromARGB(255, 31, 31,
+                          31),
+                              border: const OutlineInputBorder(
+                                borderSide: BorderSide.none, // Remova o contorno
+                                ),
+                            ),
+                            cursorColor: Colors.white,
+                            style: TextStyle(color: Colors.white),
+                          ),
+                          SizedBox(height: 10),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              DropdownButton<String>(
+                                value: _fromCurrency,
+                                dropdownColor: Colors.grey[800],
+                                items: ['USD', 'EUR', 'GBP'].map((String value) {
+                                  return DropdownMenuItem<String>(
+                                    value: value,
+                                    child: Text(
+                                      value,
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                  );
+                                }).toList(),
+                                onChanged: (newValue) {
+                                  setState(() {
+                                    _fromCurrency = newValue!;
+                                  });
+                                },
+                              ),
+                              Icon(Icons.swap_horiz, color: Colors.white),
+                              DropdownButton<String>(
+                                value: _toCurrency,
+                                dropdownColor: Colors.grey[800],
+                                items: ['BRL'].map((String value) {
+                                  return DropdownMenuItem<String>(
+                                    value: value,
+                                    child: Text(
+                                      value,
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                  );
+                                }).toList(),
+                                onChanged: (newValue) {
+                                  setState(() {
+                                    _toCurrency = newValue!;
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 10),
+                          ElevatedButton(
+                            onPressed: _convertCurrency,
+                            child: Text('Converter', style: TextStyle(color: Colors.white, fontSize: 17)),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.cyan,
+                            ),
+                          ),
+                          SizedBox(height: 20),
+                          Text(
+                            _conversionResult,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18.0,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
@@ -169,8 +266,6 @@ class _CotacaoScreenState extends State<QuoteScreen> {
         return Icons.euro;
       case 'GBP':
         return Icons.currency_pound;
-      case 'JPY':
-        return Icons.currency_yen;
       default:
         return Icons.monetization_on;
     }

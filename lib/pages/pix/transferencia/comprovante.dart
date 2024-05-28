@@ -18,7 +18,7 @@ class ComprovanteScreen extends StatelessWidget {
         leading: IconButton(
           icon: const Icon(Icons.close, color: Colors.white),
           onPressed: () {
-            Navigator.pop(context);
+            Navigator.of(context).pushNamed('/home');
           },
         ),
         actions: [
